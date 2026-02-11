@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fondo selva (Canvas) + Formulario Campamento</title>
+    <style>
+        /* ======================================================
+       Fondo tipo “aventura en la selva” con <canvas>
+       - El canvas queda fijo, a pantalla completa, detrás.
+       - El formulario queda centrado y súper legible.
+       ====================================================== */
+
+        :root {
+            /* Paleta base (puedes cambiarlos a tu gusto) */
+            --verde-oscuro: #06261c;
+            --verde-medio: #0b3d2e;
+            --verde-claro: #0f6b4a;
+            --arena: #d9c59b;
+            --blanco: #ffffff;
+            --texto: #0b1220;
+
+            /* Tarjeta del formulario */
+            --card-bg: rgba(255, 255, 255, .84);
+            --card-border: rgba(255, 255, 255, .32);
+            --shadow: 0 18px 55px rgba(0, 0, 0, .35);
+            --radius: 18px;
+        }
+
+        /* ---- Reset básico ---- */
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color: var(--texto);
+            overflow-x: hidden;
+
+            /* Fondo “de respaldo” por si el canvas tarda en pintar */
+            background: radial-gradient(1200px 800px at 20% 10%, var(--verde-claro), var(--verde-oscuro));
+        }
+
+        /* ---- Canvas como fondo ---- */
+        #jungle-bg {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            /* detrás de todo */
+            display: block;
+        }
+
+        /* ---- Capa de “oscurito” para contraste con el formulario ---- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(900px 700px at 50% 20%, rgba(255, 255, 255, .10), rgba(0, 0, 0, 0) 55%),
+                linear-gradient(to bottom, rgba(0, 0, 0, .25), rgba(0, 0, 0, .45));
+        }
+
+        /* ---- Layout general ---- */
+        .wrap {
+            min-height: 100%;
+            display: grid;
+            place-items: center;
+            padding: 28px 16px;
+        }
+
+        /* ---- Tarjeta del formulario ---- */
+        .card {
+            width: min(720px, 100%);
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .card-head {
+            padding: 18px 18px 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, .08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
+            user-select: none;
+            font-size: 22px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: .2px;
+        }
+
+        .sub {
+            margin: 4px 0 0;
+            font-size: 13px;
+            opacity: .8;
+        }
+
+        .card-body {
+            padding: 18px;
+        }
+
+        /* ---- Form ---- */
+        form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, .18);
+            background: rgba(255, 255, 255, .92);
+            outline: none;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: rgba(14, 165, 233, .55);
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, .18);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .06s ease, filter .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            color: white;
+            background: linear-gradient(135deg, #0ea5e9, #f97316);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .22);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, .55);
+            border: 1px solid rgba(0, 0, 0, .14);
+        }
+
+        .hint {
+            margin: 10px 0 0;
+            font-size: 12px;
+            opacity: .8;
+            line-height: 1.35;
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 680px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Canvas de fondo (aventura en la selva) -->
+    <canvas id="jungle-bg" aria-hidden="true"></canvas>
+    <div class="overlay" aria-hidden="true"></div>
+
+    <div class="wrap">
+        <div class="card">
+            <div class="card-head">
+                <div class="brand">
+                    <div class="badge">🧭</div>
+                    <div>
+                        <h1>Inscripción — Campamento de Verano</h1>
+                        <p class="sub">Fondo selva estilo “aventura” hecho con Canvas</p>
+                    </div>
+                </div>
+                <button class="btn btn-ghost" type="button" id="btn-export">Exportar fondo PNG</button>
+            </div>
+
+            <div class="card-body">
+                <!-- Formulario de ejemplo (cámbialo por el tuyo sin problema) -->
+                <form>
+                    <div class="grid">
+                        <label>
+                            Nombre
+                            <input type="text" placeholder="Ej: Piero" />
+                        </label>
+                        <label>
+                            Apellidos
+                            <input type="text" placeholder="Ej: Olivares" />
+                        </label>
+                    </div>
+
+                    <div class="grid">
+                        <label>
+                            Email
+                            <input type="email" placeholder="correo@ejemplo.com" />
+                        </label>
+                        <label>
+                            Teléfono
+                            <input type="tel" placeholder="+34 ..." />
+                        </label>
+                    </div>
+
+                    <div class="grid">
+                        <label>
+                            Sesión
+                            <select>
+                                <option>Julio — Semana 1</option>
+                                <option>Julio — Semana 2</option>
+                                <option>Agosto — Semana 1</option>
+                                <option>Agosto — Semana 2</option>
+                            </select>
+                        </label>
+                        <label>
+                            Turno
+                            <select>
+                                <option>Mañana</option>
+                                <option>Tarde</option>
+                                <option>Todo el día</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>
+                        Notas (alergias, necesidades, etc.)
+                        <textarea placeholder="Cuéntanos lo importante para cuidar al campista 🙂"></textarea>
+                    </label>
+
+                    <div class="actions">
+                        <button class="btn btn-ghost" type="reset">Limpiar</button>
+                        <button class="btn btn-primary" type="button">Enviar</button>
+                    </div>
+
+                    <p class="hint">
+                        Tip rápido: si quieres este fondo en tu proyecto, copia el
+                        <code>&lt;canvas id="jungle-bg"&gt;</code>,
+                        el CSS de <code>#jungle-bg</code> y el script de abajo. Listo.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================================================
+        //  Fondo selva “aventura” generado con Canvas
+        //  - Dibuja capa estática (cielo/vegetación/siluetas)
+        //  - Anima “luciérnagas” suaves para dar vida
+        // ======================================================
+
+        const canvas = document.getElementById('jungle-bg');
+        const ctx = canvas.getContext('2d', { alpha: true });
+
+        // Capa estática para no redibujar todo en cada frame
+        const staticLayer = document.createElement('canvas');
+        const sctx = staticLayer.getContext('2d');
+
+        // Partículas tipo luciérnagas
+        const fireflies = [];
+        const FIREFLIES = 100;
+
+        // --- Puntero (mouse/touch) para apartar luciérnagas ---
+        const pointer = { x: 0, y: 0 };
+        let lastPointerAt = 0; // timestamp del último movimiento del puntero
+        const REPEL_RADIUS = 140; // radio de “empuje” (px)
+        const REPEL_FORCE = 0.0022; // fuerza base (ajústala a gusto)
+
+        let W = 0, H = 0, DPR = 1;
+        let t0 = performance.now();
+
+        function rand(min, max) {
+            return min + Math.random() * (max - min);
+        }
+
+        function clamp(v, a, b) {
+            return Math.max(a, Math.min(b, v));
+        }
+
+        function updatePointer(e) {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+            lastPointerAt = performance.now();
+        }
+
+        function setSize() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            DPR = clamp(window.devicePixelRatio || 1, 1, 2);
+
+            // Canvas principal
+            canvas.width = Math.floor(W * DPR);
+            canvas.height = Math.floor(H * DPR);
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+            // Capa estática
+            staticLayer.width = Math.floor(W * DPR);
+            staticLayer.height = Math.floor(H * DPR);
+            sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+            buildStatic();
+            seedFireflies();
+        }
+
+        function buildStatic() {
+            // Limpia
+            sctx.clearRect(0, 0, W, H);
+
+            // ===== 1) Cielo/ambiente (gradiente) =====
+            const sky = sctx.createLinearGradient(0, 0, 0, H);
+            sky.addColorStop(0.00, '#0f6b4a');
+            sky.addColorStop(0.50, '#0b3d2e');
+            sky.addColorStop(1.00, '#06261c');
+            sctx.fillStyle = sky;
+            sctx.fillRect(0, 0, W, H);
+
+            // ===== 2) “Rayo de sol” suave (para sensación de aventura) =====
+            const sunX = W * 0.18;
+            const sunY = H * 0.14;
+            const sun = sctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, Math.max(W, H) * 0.55);
+            sun.addColorStop(0.00, 'rgba(255, 255, 210, 0.20)');
+            sun.addColorStop(0.25, 'rgba(255, 240, 170, 0.08)');
+            sun.addColorStop(1.00, 'rgba(0, 0, 0, 0)');
+            sctx.fillStyle = sun;
+            sctx.fillRect(0, 0, W, H);
+
+            // ===== 3) Niebla ligera (profundidad) =====
+            for (let i = 0; i < 4; i++) {
+                const y = H * rand(0.15, 0.85);
+                const fog = sctx.createRadialGradient(W * rand(0.1, 0.9), y, 0, W * rand(0.1, 0.9), y, W * rand(0.25, 0.45));
+                fog.addColorStop(0, 'rgba(255,255,255,0.06)');
+                fog.addColorStop(1, 'rgba(255,255,255,0)');
+                sctx.fillStyle = fog;
+                sctx.fillRect(0, 0, W, H);
+            }
+
+            // ===== 4) Siluetas lejanas (colinas) =====
+            drawHills();
+
+            // ===== 5) Camino/clarito en el centro (para “ruta de exploración”) =====
+            drawPath();
+
+            // ===== 6) Vegetación: capas de hojas/vines =====
+            drawCanopy();
+            drawVines();
+            drawForegroundLeaves();
+
+            // ===== 7) Viñeta suave para enfoque al centro =====
+            const vign = sctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.15, W / 2, H / 2, Math.max(W, H) * 0.75);
+            vign.addColorStop(0.0, 'rgba(0,0,0,0)');
+            vign.addColorStop(1.0, 'rgba(0,0,0,0.32)');
+            sctx.fillStyle = vign;
+            sctx.fillRect(0, 0, W, H);
+
+            // ===== 8) Grano sutil (textura) =====
+            addGrain(0.06);
+        }
+
+        function drawHills() {
+            sctx.save();
+            sctx.globalAlpha = 0.65;
+
+            // Capa 1
+            sctx.fillStyle = '#083022';
+            sctx.beginPath();
+            sctx.moveTo(0, H * 0.62);
+            sctx.bezierCurveTo(W * 0.20, H * 0.54, W * 0.35, H * 0.70, W * 0.55, H * 0.60);
+            sctx.bezierCurveTo(W * 0.72, H * 0.52, W * 0.86, H * 0.70, W, H * 0.62);
+            sctx.lineTo(W, H);
+            sctx.lineTo(0, H);
+            sctx.closePath();
+            sctx.fill();
+
+            // Capa 2
+            sctx.globalAlpha = 0.75;
+            sctx.fillStyle = '#06261c';
+            sctx.beginPath();
+            sctx.moveTo(0, H * 0.74);
+            sctx.bezierCurveTo(W * 0.22, H * 0.66, W * 0.42, H * 0.86, W * 0.62, H * 0.72);
+            sctx.bezierCurveTo(W * 0.78, H * 0.62, W * 0.90, H * 0.86, W, H * 0.74);
+            sctx.lineTo(W, H);
+            sctx.lineTo(0, H);
+            sctx.closePath();
+            sctx.fill();
+
+            sctx.restore();
+
+            // Árboles lejanos (siluetas)
+            for (let i = 0; i < 9; i++) {
+                const x = W * (i / 8);
+                const y = H * rand(0.54, 0.72);
+                drawPalmSilhouette(x + rand(-40, 40), y, rand(35, 70), 0.22);
+            }
+        }
+
+        function drawPalmSilhouette(x, y, size, alpha) {
+            sctx.save();
+            sctx.globalAlpha = alpha;
+            sctx.fillStyle = '#041c14';
+
+            // Tronco
+            sctx.beginPath();
+            sctx.moveTo(x, y);
+            sctx.quadraticCurveTo(x + size * 0.08, y + size * 0.55, x + size * 0.12, y + size * 1.1);
+            sctx.quadraticCurveTo(x + size * 0.02, y + size * 1.12, x - size * 0.04, y + size * 1.1);
+            sctx.quadraticCurveTo(x - size * 0.02, y + size * 0.55, x, y);
+            sctx.closePath();
+            sctx.fill();
+
+            // Hojas
+            const fronds = 7;
+            for (let i = 0; i < fronds; i++) {
+                const a = (-Math.PI * 0.75) + (i * (Math.PI * 1.05 / (fronds - 1)));
+                const len = size * rand(0.75, 1.05);
+                sctx.beginPath();
+                sctx.moveTo(x, y);
+                sctx.quadraticCurveTo(x + Math.cos(a) * len * 0.55, y + Math.sin(a) * len * 0.55, x + Math.cos(a) * len, y + Math.sin(a) * len);
+                sctx.quadraticCurveTo(x + Math.cos(a) * len * 0.85, y + Math.sin(a) * len * 0.78, x, y);
+                sctx.closePath();
+                sctx.fill();
+            }
+
+            sctx.restore();
+        }
+
+        function drawPath() {
+            // Un “clarito” central para que el formulario se sienta en una zona más despejada
+            const path = sctx.createRadialGradient(W * 0.52, H * 0.78, 20, W * 0.52, H * 0.78, Math.min(W, H) * 0.60);
+            path.addColorStop(0.00, 'rgba(217,197,155,0.26)');
+            path.addColorStop(0.35, 'rgba(217,197,155,0.10)');
+            path.addColorStop(1.00, 'rgba(217,197,155,0)');
+            sctx.fillStyle = path;
+            sctx.fillRect(0, 0, W, H);
+
+            // Huellitas súper sutiles (aventura)
+            sctx.save();
+            sctx.globalAlpha = 0.08;
+            sctx.fillStyle = '#f2e6c8';
+            const steps = 12;
+            for (let i = 0; i < steps; i++) {
+                const px = W * 0.50 + Math.sin(i * 0.7) * W * 0.03;
+                const py = H * 0.92 - i * (H * 0.05);
+                drawFootprint(px, py, 10 + i * 0.2, i % 2 === 0 ? -0.25 : 0.25);
+            }
+            sctx.restore();
+        }
+
+        function drawFootprint(x, y, s, rot) {
+            sctx.save();
+            sctx.translate(x, y);
+            sctx.rotate(rot);
+            // Talón
+            sctx.beginPath();
+            sctx.ellipse(0, 0, s * 0.45, s * 0.30, 0, 0, Math.PI * 2);
+            sctx.fill();
+            // Punta
+            sctx.beginPath();
+            sctx.ellipse(0, -s * 0.55, s * 0.38, s * 0.55, 0, 0, Math.PI * 2);
+            sctx.fill();
+            // Dedos
+            for (let i = 0; i < 4; i++) {
+                sctx.beginPath();
+                sctx.ellipse(-s * 0.25 + i * (s * 0.18), -s * 1.10, s * 0.12, s * 0.12, 0, 0, Math.PI * 2);
+                sctx.fill();
+            }
+            sctx.restore();
+        }
+
+        function drawCanopy() {
+            // Capa superior de hojas (silueta)
+            sctx.save();
+            sctx.globalAlpha = 0.90;
+            sctx.fillStyle = '#041c14';
+            sctx.beginPath();
+            sctx.moveTo(0, 0);
+            sctx.lineTo(W, 0);
+            sctx.lineTo(W, H * 0.12);
+            sctx.bezierCurveTo(W * 0.80, H * 0.08, W * 0.68, H * 0.18, W * 0.50, H * 0.12);
+            sctx.bezierCurveTo(W * 0.33, H * 0.06, W * 0.20, H * 0.18, 0, H * 0.12);
+            sctx.closePath();
+            sctx.fill();
+            sctx.restore();
+        }
+
+        function drawVines() {
+            sctx.save();
+            sctx.strokeStyle = 'rgba(0,0,0,0.25)';
+            sctx.lineWidth = 3;
+            sctx.lineCap = 'round';
+
+            const vines = 7;
+            for (let i = 0; i < vines; i++) {
+                const x = W * (i / (vines - 1));
+                const top = -20;
+                const len = H * rand(0.45, 0.78);
+                const sway = W * rand(0.02, 0.06);
+
+                sctx.beginPath();
+                sctx.moveTo(x, top);
+                sctx.quadraticCurveTo(x + sway, len * 0.33, x - sway * 0.6, len);
+                sctx.stroke();
+
+                // Hojitas en la liana
+                const leaves = Math.floor(rand(5, 10));
+                for (let j = 0; j < leaves; j++) {
+                    const p = j / (leaves - 1);
+                    const lx = x + Math.sin(p * 3.2) * sway * 0.75;
+                    const ly = top + p * len;
+                    drawLeaf(sctx, lx, ly, rand(14, 26), rand(-1.2, 1.2), 'rgba(15,107,74,0.65)');
+                }
+            }
+
+            sctx.restore();
+        }
+
+        function drawForegroundLeaves() {
+            // Hojas grandes a los bordes para “marco”
+            const colors = ['rgba(15,107,74,0.85)', 'rgba(11,61,46,0.85)', 'rgba(6,38,28,0.85)'];
+
+            for (let i = 0; i < 28; i++) {
+                const side = Math.random() < 0.5 ? 'L' : 'R';
+                const x = side === 'L' ? rand(-40, W * 0.18) : rand(W * 0.82, W + 40);
+                const y = rand(H * 0.10, H * 0.95);
+                const sz = rand(30, 110);
+                const rot = side === 'L' ? rand(-0.8, 0.3) : rand(-0.3, 0.8);
+                const c = colors[Math.floor(rand(0, colors.length))];
+                drawLeaf(sctx, x, y, sz, rot, c);
+            }
+        }
+
+        function drawLeaf(c, x, y, size, rot, color) {
+            c.save();
+            c.translate(x, y);
+            c.rotate(rot);
+            c.fillStyle = color;
+
+            // Hoja estilo “monstera” simplificada (forma orgánica)
+            c.beginPath();
+            c.moveTo(0, -size * 0.55);
+            c.bezierCurveTo(size * 0.65, -size * 0.45, size * 0.75, size * 0.10, 0, size * 0.60);
+            c.bezierCurveTo(-size * 0.75, size * 0.10, -size * 0.65, -size * 0.45, 0, -size * 0.55);
+            c.closePath();
+            c.fill();
+
+            // Nervio central
+            c.globalAlpha *= 0.55;
+            c.strokeStyle = 'rgba(255,255,255,0.18)';
+            c.lineWidth = Math.max(1, size * 0.03);
+            c.beginPath();
+            c.moveTo(0, -size * 0.45);
+            c.quadraticCurveTo(size * 0.08, 0, 0, size * 0.50);
+            c.stroke();
+
+            c.restore();
+        }
+
+        function addGrain(alpha) {
+            // “Grano” simple: puntos aleatorios semi transparentes
+            const count = Math.floor((W * H) / 9000);
+            sctx.save();
+            sctx.globalAlpha = alpha;
+            sctx.fillStyle = 'rgba(0,0,0,0.35)';
+            for (let i = 0; i < count; i++) {
+                const x = Math.random() * W;
+                const y = Math.random() * H;
+                sctx.fillRect(x, y, 1, 1);
+            }
+            sctx.restore();
+        }
+
+        function seedFireflies() {
+            fireflies.length = 0;
+            for (let i = 0; i < FIREFLIES; i++) {
+                fireflies.push({
+                    x: rand(0, W),
+                    y: rand(H * 0.15, H * 0.92),
+                    vx: rand(-0.18, 0.18),
+                    vy: rand(-0.06, 0.06),
+                    r: rand(1.2, 2.8),
+                    phase: rand(0, Math.PI * 2),
+                    speed: rand(0.7, 1.6)
+                });
+            }
+        }
+
+        function drawFireflies(dt, now) {
+            // Dibuja luciérnagas con un brillo suave
+            const pointerActive = (now - lastPointerAt) < 1200; // se apaga si no mueves el mouse un rato
+            ctx.save();
+
+            for (const f of fireflies) {
+                // Apartar con el puntero (repulsión)
+                if (pointerActive) {
+                    const dx = f.x - pointer.x;
+                    const dy = f.y - pointer.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > 0.0001 && dist < REPEL_RADIUS) {
+                        const push = (1 - dist / REPEL_RADIUS);
+                        const ax = (dx / dist) * REPEL_FORCE * push;
+                        const ay = (dy / dist) * REPEL_FORCE * push;
+                        f.vx += ax * dt;
+                        f.vy += ay * dt;
+
+                        // Limita velocidad para que no “salgan disparadas”
+                        const vmax = 0.65;
+                        f.vx = clamp(f.vx, -vmax, vmax);
+                        f.vy = clamp(f.vy, -vmax, vmax);
+                    }
+                }
+
+                // Un poquito de “fricción” suave
+                f.vx *= 0.995;
+                f.vy *= 0.995;
+
+                // Movimiento base
+                f.phase += dt * 0.002 * f.speed;
+                f.x += f.vx * dt;
+                f.y += f.vy * dt + Math.sin(f.phase) * 0.02 * dt;
+
+                // Rebote suave
+                if (f.x < -20) f.x = W + 20;
+                if (f.x > W + 20) f.x = -20;
+                if (f.y < H * 0.10) f.y = H * 0.90;
+                if (f.y > H * 0.95) f.y = H * 0.12;
+
+                const glow = 0.18 + 0.22 * (0.5 + 0.5 * Math.sin(f.phase));
+
+                const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 10);
+                g.addColorStop(0, `rgba(255, 245, 170, ${glow})`);
+                g.addColorStop(0.4, `rgba(255, 245, 170, ${glow * 0.35})`);
+                g.addColorStop(1, 'rgba(255, 245, 170, 0)');
+
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r * 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // puntito central
+                ctx.fillStyle = `rgba(255, 250, 210, ${glow * 1.2})`;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function frame(now) {
+            const dt = now - t0;
+            t0 = now;
+
+            // 1) Pinta la capa estática
+            ctx.clearRect(0, 0, W, H);
+            ctx.drawImage(staticLayer, 0, 0, W, H);
+
+            // 2) Anima luciérnagas
+            drawFireflies(dt, now);
+
+            requestAnimationFrame(frame);
+        }
+
+        // ---- Exportar PNG (útil si quieres convertirlo a imagen y usarlo como background-image) ----
+        document.getElementById('btn-export').addEventListener('click', () => {
+            // Dibujamos una imagen “final” sin luciérnagas (solo estático) para que quede limpia.
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = staticLayer.width;
+            exportCanvas.height = staticLayer.height;
+            const ectx = exportCanvas.getContext('2d');
+            ectx.drawImage(staticLayer, 0, 0);
+
+            const a = document.createElement('a');
+            a.download = 'fondo-selva-campamento.png';
+            a.href = exportCanvas.toDataURL('image/png');
+            a.click();
+        });
+
+        // ---- Init ----
+        setSize();
+        window.addEventListener('resize', setSize);
+
+        // Apartar luciérnagas con el mouse/touch (funciona aunque estés encima del formulario)
+        window.addEventListener('pointermove', updatePointer, { passive: true });
+        window.addEventListener('pointerdown', updatePointer, { passive: true });
+        window.addEventListener('blur', () => { lastPointerAt = 0; });
+
+        requestAnimationFrame((n) => { t0 = n; requestAnimationFrame(frame); });
+    </script>
+</body>
+
+</html>
