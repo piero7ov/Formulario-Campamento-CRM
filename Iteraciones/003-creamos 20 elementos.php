@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <title>Formulario</title>
+    <meta charset="utf-8">
+    <style>
+      /* ===== Reset básico ===== */
+      *{
+        box-sizing: border-box;
+      }
+
+      body{
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        background: #f5f7fb;
+        color: #111827;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      /* ===== Form width ===== */
+      form{
+        width: min(520px, 100%);
+      }
+
+      /* ===== Fieldset estilo tarjeta ===== */
+      fieldset{
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.07);
+      }
+
+      legend{
+        font-weight: 700;
+        padding: 0 10px;
+        color: #0f172a;
+      }
+
+      /* ===== Bloques control_formulario ===== */
+      .control_formulario{
+        margin-top: 14px; /* separa cada bloque */
+      }
+
+      .control_formulario label{
+        display: block;
+        margin: 0 0 6px;
+        font-size: 0.95rem;
+        color: #374151;
+      }
+
+      .control_formulario input[type="text"]{
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        outline: none;
+        background: #fff;
+        transition: border-color .2s, box-shadow .2s, transform .05s;
+      }
+
+      .control_formulario input[type="text"]:focus{
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, .15);
+      }
+
+      /* ===== Botón submit ===== */
+      input[type="submit"]{
+        margin-top: 18px;
+        width: 100%;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0ea5e9, #1e3a8a);
+        color: white;
+        box-shadow: 0 10px 18px rgba(14,165,233,.25);
+        transition: transform .08s ease, filter .2s ease;
+      }
+
+      input[type="submit"]:hover{
+        filter: brightness(1.05);
+      }
+
+      input[type="submit"]:active{
+        transform: translateY(1px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <form>
+      <fieldset>
+        <legend>Formulario de recogida de datos</legend>
+        <?php for($i = 0;$i<20;$i++){ ?>
+        <div class="control_formulario">
+          <label for="nombre">Introduce tu nombre</label>
+          <input type="text" name="nombre" id="nombre">
+        </div>
+        <?php } ?>
+        <input type="submit" value="Enviar">
+      </fieldset>
+    </form>
+  </body>
+</html>
