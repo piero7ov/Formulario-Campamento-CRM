@@ -1,0 +1,44 @@
+/* ======================================================
+   Fondo “selva aventura” con canvas reutilizable
+   - Canvas fijo detrás
+   - Overlay para contraste
+   - Tu contenido por encima
+   ====================================================== */
+
+/* Canvas a pantalla completa detrás de todo */
+#jungle-bg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    display: block;
+}
+
+/* Capa de oscurecido (para que el formulario se lea bien) */
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(900px 700px at 50% 20%, rgba(255, 255, 255, .10), rgba(0, 0, 0, 0) 55%),
+        linear-gradient(to bottom, rgba(0, 0, 0, .25), rgba(0, 0, 0, .45));
+}
+
+/* Asegura que tu contenido quede por encima del fondo */
+.bg-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Fondo de respaldo por si el canvas tarda en pintar */
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(1200px 800px at 20% 10%, #0f6b4a, #06261c);
+}
