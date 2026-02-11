@@ -47,8 +47,8 @@ $opsAction = in_array($opsAction, ["create","edit"], true) ? $opsAction : "creat
    ---------------------------------------------------------
 ========================================================= */
 $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
-$username = 'pieroolivaresdev@gmail.com';
-$password = 'dfhwnrmelbpztsnv';
+$username = '[EMAIL_ADDRESS]';
+$password = '';
 
 $smtpHost = 'smtp.gmail.com';
 $smtpPort = 587; // STARTTLS
@@ -73,8 +73,8 @@ $c->set_charset("utf8mb4");
 /* =========================================================
    3) LOGIN ADMIN (mismo archivo)
 ========================================================= */
-$ADMIN_USER = "piero7ov";
-$ADMIN_PASS = "piero7ov";
+$ADMIN_USER = "";
+$ADMIN_PASS = "";
 
 /* =========================================================
    4) TABLAS AUXILIARES CRM (NO tocan tu tabla principal)
